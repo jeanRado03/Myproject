@@ -1,13 +1,30 @@
 import javax.swing.*;
+import java.awt.*;
 import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class ClientServ extends JFrame {
     private int height = 600,width = 1000;
-    public JFileChooser fileChooser = new JFileChooser("D:\\");
+    public static JFileChooser fileChooser = new JFileChooser("D:\\");
     JProgressBar bar;
-    public static String send;
+    public static String sendFile;
+    static final String host = "localhost";
+    static final int port = 5000;
+    static Socket socketClient;
+
+    static {
+        try {
+            socketClient = new Socket(host,port);
+            Contenant.connecter = "Connection accepted: server";
+        } catch (ConnectException ce){
+            System.out.println(ce);
+            Contenant.connecter = ce.getMessage();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public int getHeight() {
@@ -34,26 +51,16 @@ public class ClientServ extends JFrame {
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setLocation(100,20);
         this.setVisible(true);
-        //this.setFocusable(true);
-        String fileChoose = "Send";
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-        fileChooser.setDialogTitle("Transfert de fichier");
-        int rt = fileChooser.showDialog(null,fileChoose);
-        if(rt == JFileChooser.APPROVE_OPTION){
-            System.out.println(fileChooser.getCurrentDirectory());
-            System.out.println(fileChooser.getSelectedFile());
-            send = fileChooser.getSelectedFile().toString();
-            String path = "D:\\myXender\\Main.java";
-            receive(path,send);
-        }
+        this.setFocusable(true);
         bar = new JProgressBar(0,100);
-        bar.setFocusable(false);
-        bar.setBounds(250,475,200,40);
+        bar.setFocusable(true);
+        bar.setBounds(250,475,497,40);
+        bar.setForeground(new Color(210,105,030));
         bar.setValue(0);
         //iterate();
         bar.setStringPainted(true);
-        this.add(bar);
-        Contenant cont = new Contenant(this);
+        //this.add(bar);
+        Contenant cont = new Contenant(this,host);
         this.add(cont);
     }
 
@@ -70,32 +77,60 @@ public class ClientServ extends JFrame {
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        ClientServ client = new ClientServ();
+    public static void choice() throws IOException {
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        fileChooser.setDialogTitle("File to send");
+        String fileChoose = "Send";
+        int rt = fileChooser.showDialog(null,fileChoose);
+        if(rt == JFileChooser.APPROVE_OPTION){
+            System.out.println(fileChooser.getCurrentDirectory());
+            System.out.println(fileChooser.getSelectedFile());
+            sendFile = fileChooser.getSelectedFile().toString();
+            String name = fileChooser.getSelectedFile().getName();
+            send(sendFile);
+        }
     }
 
-    public void receive(String file_to_receive,String file_to_send) throws IOException {
-        final int port = 5000;
-        final String host = "localhost";
-        final int file_size = 60120;
+    public static void main(String[] args) throws IOException {
+        ClientServ client = new ClientServ();
+        //client.iterate();
+    }
+
+    public static void waiting(){
+        String path = "D:\\myXender\\tp24h.sql";
+        try {
+            ClientServ.receive(path);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static void send(String file_to_send) throws IOException{
         DataOutputStream dataOutputStream = null;
+        try {
+            dataOutputStream = new DataOutputStream(socketClient.getOutputStream());
+            if (sendFile != null) {
+                String path = file_to_send;
+                dataOutputStream.writeUTF(path);
+            }
+        }finally {
+            if(dataOutputStream != null) dataOutputStream.close();
+        }
+    }
+
+    public static void receive(String file_to_receive) throws IOException {
+        final int file_size = 60120;
+
         DataInputStream dataInputStream = null;
 
         int bytesRead;
         int current = 0;
         FileOutputStream fos = null;
         BufferedOutputStream bos = null;
-        Socket socket = null;
         try{
-            socket = new Socket(host,port);
             System.out.println("Connecting...");
-            dataOutputStream = new DataOutputStream(socket.getOutputStream());
-            if(send!=null) {
-                String path = file_to_send;
-                dataOutputStream.writeUTF(path);
-            }
             byte [] mybyte = new byte[file_size];
-            InputStream is = socket.getInputStream();
+            InputStream is = socketClient.getInputStream();
             fos = new FileOutputStream(file_to_receive);
             bos = new BufferedOutputStream(fos);
             bytesRead = is.read(mybyte,0, mybyte.length);
@@ -116,8 +151,7 @@ public class ClientServ extends JFrame {
         } finally {
             if(fos != null) fos.close();
             if(bos != null) bos.close();
-            if(socket != null) socket.close();
-            if(dataInputStream != null) dataOutputStream.close();
+            if(socketClient != null) socketClient.close();
         }
     }
 }
