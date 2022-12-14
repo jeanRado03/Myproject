@@ -1,29 +1,78 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Vector;
 
 public class Server {
     private static DataOutputStream dataOutputStream = null;
     private static DataInputStream dataInputStream = null;
-    private static DataOutputStream dataOutputStream1 = null;
-    private static DataInputStream dataInputStream1 = null;
     public static void main(String[] args) {
-        String serverDirectory = "";
+        ServerSocket serverSocket = null;
+        ArrayList<Socket> sockets = new ArrayList<>();
         try{
-            ServerSocket serverSocket = new ServerSocket(5000);
-            System.out.println("listening to port 5000");
-            Socket clientSocket = serverSocket.accept();
-            System.out.println(clientSocket+"Connected\n");
-            dataInputStream = new DataInputStream(clientSocket.getInputStream());
-            dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
-            String message = "";
-                message = dataInputStream.readUTF();
-                System.out.println(message);
-                send(message,clientSocket,serverSocket);
-            dataInputStream.close();
-            dataOutputStream.close();
+            serverSocket = new ServerSocket(5000);
+            serverSocket.setReuseAddress(true);
+            System.out.println("Waiting for clients");
+            while (true){
+                if(sockets.size() > 1){
+                    for (int i = 0; i < sockets.size(); i++) {
+                        ClientHandler clientSocket1 = new ClientHandler(sockets.get(i),serverSocket,sockets);
+                        new Thread(clientSocket1).start();
+                    }
+                }
+                Socket client = serverSocket.accept();
+                System.out.println("New client connected "+client.getInetAddress().getHostAddress());
+                System.out.println(client+"Connected\n");
+                sockets.add(client);
+            }
         }catch (Exception e){
             System.out.println(e.toString());
+        }
+    }
+
+    private static class ClientHandler implements Runnable {
+
+        private final Socket clientSocket;
+        private final ServerSocket serverSocket;
+        private ArrayList<Socket> lists;
+        public ClientHandler (Socket socket,ServerSocket server,ArrayList<Socket> list){
+            this.clientSocket = socket;
+            this.serverSocket = server;
+            this.lists = list;
+        }
+
+        @Override
+        public void run() {
+            PrintWriter out = null;
+            BufferedReader in = null;
+            Socket clientSocket1 = null;
+            try{
+                for(Socket st : lists){
+                    if(clientSocket != st){
+                        clientSocket1 = st;
+                    }
+                }
+                dataInputStream = new DataInputStream(clientSocket.getInputStream());
+                dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
+                String message = "";
+                    message = dataInputStream.readUTF();
+                    System.out.println(message);
+                    send(message, clientSocket1, serverSocket);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }finally {
+                try {
+                    if(out!=null)out.close();
+                    if(in!=null)in.close();
+                    dataInputStream.close();
+                    dataOutputStream.close();
+                    //clientSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
