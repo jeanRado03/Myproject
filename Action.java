@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class Action implements ActionListener {
     JFrame frame;
@@ -21,8 +22,14 @@ public class Action implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if(e.getActionCommand().matches("Exit")){
             this.getFrame().dispose();
-        }else{
-
+        }else if(e.getActionCommand().matches("Send a File")){
+            try {
+                ClientServ.choice();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }else if(e.getActionCommand().matches("receive")){
+            ClientServ.waiting();
         }
     }
 }
