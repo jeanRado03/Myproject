@@ -5,6 +5,7 @@ import java.io.IOException;
 
 public class Action implements ActionListener {
     JFrame frame;
+    JTextField text = new JTextField();
 
     public JFrame getFrame() {
         return frame;
@@ -29,7 +30,22 @@ public class Action implements ActionListener {
                 ex.printStackTrace();
             }
         }else if(e.getActionCommand().matches("receive")){
-            ClientServ.waiting();
+            JFrame frame = new JFrame();
+            frame.setVisible(true);
+            frame.setLayout(null);
+            frame.setLocation(500,300);
+            frame.setSize(140,140);
+            JButton bt = new JButton("SetFileName");
+            text.setBounds(4,4,115,46);
+            bt.setBounds(4,52,115,44);
+            bt.addActionListener(this);
+            frame.add(text);
+            frame.add(bt);
+            //ClientServ.waiting();
+        }
+        if(e.getActionCommand().matches("SetFileName")){
+            String nom = text.getText();
+            ClientServ.waiting(nom);
         }
     }
 }

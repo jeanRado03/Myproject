@@ -8,7 +8,7 @@ import java.util.Vector;
 public class Server {
     private static DataOutputStream dataOutputStream = null;
     private static DataInputStream dataInputStream = null;
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = null;
         ArrayList<Socket> sockets = new ArrayList<>();
         try{
@@ -29,6 +29,11 @@ public class Server {
             }
         }catch (Exception e){
             System.out.println(e.toString());
+        }finally {
+            for (int i = 0; i < sockets.size(); i++) {
+                sockets.get(i).close();
+            }
+            serverSocket.close();
         }
     }
 
@@ -61,14 +66,14 @@ public class Server {
                     System.out.println(message);
                     send(message, clientSocket1, serverSocket);
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println(e.getMessage());
             }finally {
                 try {
                     if(out!=null)out.close();
                     if(in!=null)in.close();
                     dataInputStream.close();
                     dataOutputStream.close();
-                    //clientSocket.close();
+                    clientSocket.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -101,11 +106,9 @@ public class Server {
                 } finally{
                     if (bis != null) bis.close();
                     if (os != null) os.close();
-                    if (socket != null) socket.close();
                 }
-        }
-        finally {
-            if(server != null) server.close();
+        }catch (Exception e){
+            System.out.println(e.getMessage());
         }
     }
 }

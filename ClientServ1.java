@@ -96,8 +96,8 @@ public class ClientServ1 extends JFrame {
         //client.iterate();
     }
 
-    public static void waiting1(){
-        String path = "C:\\myXender\\tp24h.sql";
+    public static void waiting1(String nom){
+        String path = "C:\\myXender\\"+nom;
         try {
             ClientServ1.receive1(path);
         } catch (IOException ex) {

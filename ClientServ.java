@@ -96,8 +96,8 @@ public class ClientServ extends JFrame {
         //client.iterate();
     }
 
-    public static void waiting(){
-        String path = "D:\\myXender\\tp24h.sql";
+    public static void waiting(String nom){
+        String path = "D:\\myXender\\"+nom;
         try {
             ClientServ.receive(path);
         } catch (IOException ex) {
@@ -151,7 +151,7 @@ public class ClientServ extends JFrame {
         } finally {
             if(fos != null) fos.close();
             if(bos != null) bos.close();
-            if(socketClient != null) socketClient.close();
+            //if(socketClient != null) socketClient.close();
         }
     }
 }
